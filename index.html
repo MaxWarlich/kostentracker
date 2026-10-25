@@ -19,11 +19,13 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- "?v=..." = Versionsnummer: Bei jeder Änderung an style.css oder app.js hochzählen,
+       damit Browser die neue Datei laden statt einer alten, zwischengespeicherten Kopie. -->
+  <link rel="stylesheet" href="style.css?v=3">
   <!-- Chart.js für die Diagramme (vom CDN), danach unsere eigene Logik.
        "defer" = Skripte laufen erst, wenn die Seite fertig aufgebaut ist (in dieser Reihenfolge). -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=3" defer></script>
 </head>
 <body>
 
