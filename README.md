@@ -12,7 +12,7 @@ Es gibt keinen Server und kein Konto, und deine Daten verlassen dein Gerät nich
 - **Kategorien:** eigene Kategorien anlegen, umbenennen und löschen, getrennt nach Einnahmen und Ausgaben
 - **Monatsübersicht:** Monat wählen und Summe der Einnahmen, Summe der Ausgaben und Summen pro Kategorie sehen
 - **Saldo-Übertrag:** Was am Monatsende übrig bleibt (oder fehlt), wird automatisch in den nächsten Monat übertragen. Die Übersicht zeigt den Übertrag aus dem Vormonat und den Saldo inklusive Übertrag.
-- **Startguthaben:** Kontostand zu Beginn eines gewählten Monats eintragen (auch negativ). Er fließt in den Übertrag ein und wird von dort weitergerechnet. Einstellbar unter **Kategorien → Startguthaben**.
+- **Startguthaben:** Geld eintragen, das du schon vor deinen Einträgen hattest (auch negativ). Es wird ab dem gewählten Monat zum Übertrag dazugerechnet. Einstellbar unter **Kategorien → Startguthaben**.
 - **Diagramme:** Kreisdiagramm der Ausgaben nach Kategorie und Balkendiagramm Einnahmen vs. Ausgaben der letzten 6 Monate
 - **Wiederkehrende Posten:** z. B. Miete, Handyvertrag oder Gehalt werden jeden Monat am eingestellten Tag automatisch eingetragen, ohne Duplikate. Posten lassen sich pausieren, bearbeiten und löschen.
 - **Suche & Filter:** nach Text, Kategorie, Typ und Zeitraum filtern
