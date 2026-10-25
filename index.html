@@ -72,6 +72,10 @@
 
       <div class="stats">
         <div class="stat">
+          <span class="stat-label">Übertrag aus Vormonat</span>
+          <span class="stat-value" id="sum-carry">0,00 €</span>
+        </div>
+        <div class="stat">
           <span class="stat-label">Einnahmen</span>
           <span class="stat-value income" id="sum-income">0,00 €</span>
         </div>
@@ -80,8 +84,9 @@
           <span class="stat-value expense" id="sum-expense">0,00 €</span>
         </div>
         <div class="stat stat-balance">
-          <span class="stat-label">Saldo (übrig)</span>
+          <span class="stat-label">Saldo inkl. Übertrag</span>
           <span class="stat-value" id="sum-balance">0,00 €</span>
+          <span class="stat-sub" id="sum-month-balance">davon dieser Monat: 0,00 €</span>
         </div>
       </div>
 
@@ -180,6 +185,25 @@
           </form>
           <ul id="cat-list-income" class="cat-list"></ul>
         </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Startguthaben</h3>
+        <p class="hint">
+          Dein Kontostand zu Beginn des gewählten Monats. Er fließt als Übertrag in diesen Monat ein
+          und wird von dort aus weitergerechnet. Bei einem überzogenen Konto gib einen negativen Betrag ein, z. B. -200,00.
+        </p>
+        <form id="form-start" class="start-form" novalidate>
+          <label class="field">
+            <span>Betrag (€)</span>
+            <input name="startBalance" inputmode="text" autocomplete="off" placeholder="0,00" class="input-amount">
+          </label>
+          <label class="field">
+            <span>Gilt ab Monat</span>
+            <select name="startMonth"></select>
+          </label>
+          <button class="btn btn-primary" type="submit">Speichern</button>
+        </form>
       </div>
 
       <div class="card">

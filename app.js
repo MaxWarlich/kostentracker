@@ -134,6 +134,21 @@ function parseAmount(text) {
   return cents > 0 ? cents : null;
 }
 
+/**
+ * Wie parseAmount, erlaubt aber auch 0 und negative Beträge (z. B. "-250,00" bei überzogenem Konto).
+ * Gibt null zurück, wenn die Eingabe ungültig ist. Ein leeres Feld zählt als 0.
+ */
+function parseSignedAmount(text) {
+  const s = String(text).trim();
+  if (!s) return 0;
+  const negative = /^[-−]/.test(s);
+  const rest = negative ? s.slice(1) : s;
+  if (/^[\s€]*0+([.,]0{1,2})?[\s€]*$/.test(rest)) return 0;
+  const cents = parseAmount(rest);
+  if (cents === null) return null;
+  return negative ? -cents : cents;
+}
+
 /** Schützt vor HTML-Einschleusung, wenn Text (z. B. Notizen) ins HTML eingesetzt wird */
 function escapeHtml(text) {
   return String(text)
@@ -180,7 +195,13 @@ function defaultState() {
     ],
     entries: [],
     recurring: [],
+    settings: defaultSettings(),
   };
+}
+
+/** Startguthaben: Betrag in Cent (darf negativ sein) und Monat, ab dem es gilt */
+function defaultSettings() {
+  return { startBalance: 0, startMonth: currentMonth() };
 }
 
 /**
@@ -195,6 +216,9 @@ function normalizeState(data) {
   const isDate = (d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
   const isMonth = (m) => typeof m === 'string' && /^\d{4}-\d{2}$/.test(m);
   const isCents = (a) => Number.isInteger(a) && a > 0;
+  const settings = data.settings && Number.isInteger(data.settings.startBalance) && isMonth(data.settings.startMonth)
+    ? { startBalance: data.settings.startBalance, startMonth: data.settings.startMonth }
+    : defaultSettings();
 
   return {
     version: 1,
@@ -202,6 +226,7 @@ function normalizeState(data) {
     entries: data.entries.filter((e) => e && e.id && isType(e.type) && isCents(e.amount) && isDate(e.date)),
     recurring: data.recurring.filter((r) => r && r.id && isType(r.type) && isCents(r.amount)
       && Number.isInteger(r.day) && isMonth(r.startMonth) && isMonth(r.lastGenerated)),
+    settings,
   };
 }
 
@@ -439,22 +464,46 @@ function sumsByCategory(entries, type) {
   })).sort((a, b) => b.sum - a.sum);
 }
 
+/**
+ * Übertrag in den angegebenen Monat.
+ * - Ab dem Startmonat: Startguthaben + Saldo aller Einträge vom Startmonat bis vor diesen Monat.
+ *   (Einträge vor dem Startmonat sind im Startguthaben schon "enthalten" und zählen nicht doppelt.)
+ * - Vor dem Startmonat: Saldo aller früheren Einträge, ohne Startguthaben.
+ */
+function carryOver(monthKey) {
+  const { startBalance, startMonth } = state.settings;
+  const useStart = monthKey >= startMonth;
+  const before = state.entries.filter((e) => {
+    const m = monthOf(e.date);
+    return m < monthKey && (!useStart || m >= startMonth);
+  });
+  return (useStart ? startBalance : 0) + sumOfType(before, 'income') - sumOfType(before, 'expense');
+}
+
+/** Betrag anzeigen: grün wenn positiv, rot wenn negativ */
+function setSignedAmount(el, cents) {
+  el.textContent = formatEuro(cents);
+  el.classList.toggle('income', cents > 0);
+  el.classList.toggle('expense', cents < 0);
+}
+
 /* ----- Übersicht ----- */
 function renderOverview() {
   const monthEntries = entriesInMonth(ui.month);
   const income = sumOfType(monthEntries, 'income');
   const expense = sumOfType(monthEntries, 'expense');
-  const balance = income - expense;
+  const monthBalance = income - expense;
+  // Übertrag = Saldo aller Einträge vor dem gewählten Monat, d. h. was aus den Vormonaten übrig ist
+  const carry = carryOver(ui.month);
+  const balance = carry + monthBalance;
 
   $('#month-label').textContent = formatMonth(ui.month);
   $('#month-today').hidden = ui.month === currentMonth();
   $('#sum-income').textContent = formatEuro(income);
   $('#sum-expense').textContent = formatEuro(expense);
-
-  const balanceEl = $('#sum-balance');
-  balanceEl.textContent = formatEuro(balance);
-  balanceEl.classList.toggle('income', balance > 0);
-  balanceEl.classList.toggle('expense', balance < 0);
+  setSignedAmount($('#sum-carry'), carry);
+  setSignedAmount($('#sum-balance'), balance);
+  $('#sum-month-balance').textContent = `davon dieser Monat: ${formatEuro(monthBalance)}`;
 
   renderCategorySums($('#cat-sums-expense'), sumsByCategory(monthEntries, 'expense'), expense, true);
   renderCategorySums($('#cat-sums-income'), sumsByCategory(monthEntries, 'income'), income, false);
@@ -664,12 +713,43 @@ function renderCategories() {
     }).join('');
   });
 
+  renderStartBalanceForm();
+
   // Fokus ins Umbenennen-Feld setzen
   const renameInput = $('.cat-rename input');
   if (renameInput) {
     renameInput.focus();
     renameInput.select();
   }
+}
+
+/* ----- Startguthaben ----- */
+
+/** Füllt das Formular mit den gespeicherten Werten (außer der Nutzer tippt gerade darin) */
+function renderStartBalanceForm() {
+  const form = $('#form-start');
+  if (form.contains(document.activeElement)) return;
+  const { startBalance, startMonth } = state.settings;
+  const now = currentMonth();
+  // Auswahl: 36 Monate zurück bis 12 voraus, plus ggf. der gespeicherte Monat
+  const months = [];
+  for (let i = -36; i <= 12; i++) months.push(addMonths(now, i));
+  if (!months.includes(startMonth)) months.push(startMonth);
+  months.sort();
+  form.elements.startMonth.innerHTML = months
+    .map((m) => `<option value="${m}">${formatMonth(m)}</option>`).join('');
+  form.elements.startMonth.value = startMonth;
+  form.elements.startBalance.value = startBalance ? centsToInput(startBalance) : '';
+}
+
+function saveStartBalance(form) {
+  const cents = parseSignedAmount(form.elements.startBalance.value);
+  if (cents === null) return showToast('Bitte einen gültigen Betrag eingeben, z. B. 1.500,00 oder -200,00.');
+  state.settings = { startBalance: cents, startMonth: form.elements.startMonth.value };
+  saveState();
+  document.activeElement.blur();
+  renderAll();
+  showToast(`Startguthaben ${formatEuro(cents)} ab ${formatMonth(state.settings.startMonth)} gespeichert`);
 }
 
 // ---------- 6. Diagramme (Chart.js) ----------
@@ -1098,6 +1178,12 @@ function bindEvents() {
   });
   catView.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && ui.editingCategoryId) { ui.editingCategoryId = null; renderCategories(); }
+  });
+
+  // Startguthaben
+  $('#form-start').addEventListener('submit', (event) => {
+    event.preventDefault();
+    saveStartBalance(event.target);
   });
 
   // Datensicherung
