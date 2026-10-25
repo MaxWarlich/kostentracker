@@ -3,9 +3,8 @@
 Ein privater Kosten-Tracker für Einnahmen und Ausgaben, der direkt im Browser läuft.
 Es gibt keinen Server und kein Konto, und deine Daten verlassen dein Gerät nicht.
 
-**Live-Version:** https://DEIN-BENUTZERNAME.github.io/kostentracker/
+**Live-Version:** https://maxwarlich.github.io/kostentracker/
 
-> Ersetze `DEIN-BENUTZERNAME` durch deinen GitHub-Benutzernamen und `kostentracker` durch den Namen deines Repositorys.
 
 ## Funktionen
 
