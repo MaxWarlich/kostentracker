@@ -412,7 +412,7 @@ select:focus {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -439,6 +439,12 @@ select:focus {
   font-weight: 700;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;
+}
+
+.stat-sub {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-box {
@@ -658,6 +664,20 @@ select:focus {
   white-space: nowrap;
 }
 
+/* Startguthaben: Betrag, Monat und Button nebeneinander (auf dem Handy untereinander) */
+.start-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+@media (max-width: 560px) {
+  .start-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cat-rename {
   display: flex;
   gap: 6px;
@@ -754,6 +774,10 @@ select:focus {
 
 /* ---------- 8. Tablet & Handy ---------- */
 @media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .filters {
     grid-template-columns: 1fr 1fr;
   }
@@ -828,8 +852,17 @@ select:focus {
     font-size: 1.3rem;
   }
 
+  .stat-balance {
+    flex-wrap: wrap;
+  }
+
   .stat-balance .stat-value {
     font-size: 1.5rem;
+  }
+
+  .stat-balance .stat-sub {
+    width: 100%;
+    text-align: right;
   }
 
   .month-label {
