@@ -1,0 +1,891 @@
+/* =========================================================
+   Kosten-Tracker – style.css
+   Aufbau:
+   1. Farben & Variablen (hell / dunkel)
+   2. Grundlayout
+   3. Kopfzeile & Navigation
+   4. Bausteine (Karten, Buttons, Formulare)
+   5. Übersicht (Kennzahlen, Diagramme, Kategorie-Summen)
+   6. Listen (Einträge, wiederkehrende Posten, Kategorien)
+   7. Dialoge, Toast, schwebender Button
+   8. Handy-Ansicht
+   ========================================================= */
+
+/* ---------- 1. Farben & Variablen ---------- */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --text: #1b1e25;
+  --text-muted: #667085;
+  --border: #e2e5ea;
+  --primary: #3563e9;
+  --primary-text: #ffffff;
+  --income: #16894a;
+  --expense: #d63c32;
+  --danger: #d63c32;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 2px 6px rgba(16, 24, 40, 0.06);
+  --radius: 14px;
+  --radius-small: 9px;
+  --nav-height: 64px;
+  color-scheme: light; /* sorgt u. a. für passende Datumsfelder */
+}
+
+/* Dunkler Modus: Es werden nur die Variablen überschrieben */
+[data-theme="dark"] {
+  --bg: #0f1115;
+  --surface: #181b21;
+  --surface-2: #232730;
+  --text: #e9ebef;
+  --text-muted: #9ba3af;
+  --border: #2d323c;
+  --primary: #6d8dff;
+  --primary-text: #0f1115;
+  --income: #45d483;
+  --expense: #ff6f66;
+  --danger: #ff6f66;
+  --shadow: none;
+  color-scheme: dark;
+}
+
+/* ---------- 2. Grundlayout ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Das "hidden"-Attribut soll immer gewinnen */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  padding-bottom: 96px; /* Platz für den schwebenden Button */
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+/* Zahlen gleich breit darstellen, damit sie sauber untereinander stehen */
+.stat-value,
+.entry-amount,
+.cat-sum-amount,
+.input-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nur die aktive Ansicht wird angezeigt */
+.view {
+  display: none;
+}
+
+.view.is-active {
+  display: block;
+}
+
+/* ---------- 3. Kopfzeile & Navigation ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.tab svg,
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.tab:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tab.is-active {
+  background: var(--surface-2);
+  color: var(--primary);
+}
+
+/* Sonne im dunklen Modus, Mond im hellen Modus zeigen */
+.theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+/* ---------- 4. Bausteine ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin-bottom: 16px;
+  min-width: 0; /* verhindert, dass Diagramme das Grid sprengen */
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.grid-2 > .card {
+  margin-bottom: 0;
+}
+
+.grid-2 + .grid-2,
+.grid-2 + .card,
+.stats + .grid-2,
+.notice + .grid-2 {
+  margin-top: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 8px 16px;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  background: var(--surface-2);
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+
+.btn-primary:hover {
+  background: var(--primary);
+  filter: brightness(1.08);
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.btn-small {
+  min-height: 34px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.icon-btn.danger:hover {
+  color: var(--danger);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Formularfelder */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+input:not([type="radio"]):not([type="file"]),
+select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem; /* 16px verhindert das automatische Zoomen auf dem iPhone */
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* Umschalter Ausgabe/Einnahme */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface-2);
+  border-radius: var(--radius-small);
+  padding: 4px;
+  gap: 4px;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented span {
+  display: block;
+  text-align: center;
+  padding: 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.segmented input:checked + span {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.segmented input[value="expense"]:checked + span { color: var(--expense); }
+.segmented input[value="income"]:checked + span { color: var(--income); }
+.segmented input:focus-visible + span { outline: 2px solid var(--primary); }
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+}
+
+.notice {
+  background: color-mix(in srgb, var(--expense) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--expense) 35%, transparent);
+  border-radius: var(--radius-small);
+  padding: 10px 14px;
+  margin: 16px 0 0;
+  font-size: 0.9rem;
+}
+
+.empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px 8px;
+  margin: 0;
+}
+
+.income { color: var(--income); }
+.expense { color: var(--expense); }
+
+/* ---------- 5. Übersicht ---------- */
+.month-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.month-label {
+  font-size: 1.35rem;
+  font-weight: 700;
+  min-width: 170px;
+  text-align: center;
+}
+
+#month-today {
+  margin-left: auto;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.chart-box {
+  position: relative;
+  height: 300px;
+}
+
+.cat-sums {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cat-sum-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-sum-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-sum-percent {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.cat-sum-amount {
+  font-weight: 600;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* ---------- 6. Listen ---------- */
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+/* Felder dürfen schmaler werden als ihr Inhalt (sonst ragen Datumsfelder über den Rand) */
+.filters > *,
+.cat-add input,
+.cat-rename input {
+  min-width: 0;
+}
+
+.filter-summary {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+
+.filter-summary strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.section-head h2 {
+  font-size: 1.35rem;
+}
+
+.list-month {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 20px 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.list-month:first-child {
+  margin-top: 0;
+}
+
+.entry-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.entry:first-child {
+  border-top: 0;
+}
+
+.entry.is-paused {
+  opacity: 0.6;
+}
+
+.entry-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.entry-sub {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.entry-amount {
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.badge-active {
+  background: color-mix(in srgb, var(--income) 15%, transparent);
+  color: var(--income);
+}
+
+/* Kategorien-Verwaltung */
+.cat-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  min-height: 52px;
+}
+
+.cat-item:first-child {
+  border-top: 0;
+}
+
+.cat-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cat-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.cat-rename {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ---------- 7. Dialoge, Toast, schwebender Button ---------- */
+.dialog {
+  border: 0;
+  padding: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.dialog::backdrop {
+  background: rgba(10, 12, 16, 0.55);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+}
+
+.dialog-form h2 {
+  font-size: 1.2rem;
+}
+
+.dialog-form .hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.form-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.fab {
+  position: fixed;
+  right: max(20px, calc((100vw - 1100px) / 2 + 20px));
+  bottom: 24px;
+  z-index: 15;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.fab:hover {
+  filter: brightness(1.08);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------- 8. Tablet & Handy ---------- */
+@media (max-width: 900px) {
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filters .field-wide,
+  #f-reset {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    padding-bottom: calc(var(--nav-height) + 90px + env(safe-area-inset-bottom));
+  }
+
+  .logo {
+    margin-right: auto;
+  }
+
+  /* Navigation wandert nach unten wie bei einer App */
+  .tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    gap: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+
+  .tab {
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 2px;
+    font-size: 0.72rem;
+  }
+
+  .tab.is-active {
+    background: transparent;
+  }
+
+  .fab {
+    bottom: calc(var(--nav-height) + 18px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
+
+  .toast {
+    bottom: calc(var(--nav-height) + 90px + env(safe-area-inset-bottom));
+  }
+
+  .grid-2,
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    gap: 10px;
+  }
+
+  .stat {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+  }
+
+  .stat-balance .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .month-label {
+    font-size: 1.15rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  #month-today {
+    margin-left: 0;
+  }
+
+  .chart-box {
+    height: 260px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .entry {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    row-gap: 4px;
+  }
+
+  .entry-actions {
+    margin-left: auto;
+  }
+
+  /* Dialog als "Bottom Sheet" am unteren Rand */
+  .dialog {
+    width: 100vw;
+    max-width: 100vw;
+    margin: auto 0 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    max-height: 92vh;
+  }
+
+  .dialog-form {
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 420px) {
+  .month-switch {
+    flex-wrap: wrap;
+  }
+
+  #month-today {
+    width: 100%;
+    order: 4;
+  }
+
+  .entry-actions .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
