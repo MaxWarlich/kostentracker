@@ -465,19 +465,15 @@ function sumsByCategory(entries, type) {
 }
 
 /**
- * Übertrag in den angegebenen Monat.
- * - Ab dem Startmonat: Startguthaben + Saldo aller Einträge vom Startmonat bis vor diesen Monat.
- *   (Einträge vor dem Startmonat sind im Startguthaben schon "enthalten" und zählen nicht doppelt.)
- * - Vor dem Startmonat: Saldo aller früheren Einträge, ohne Startguthaben.
+ * Übertrag in den angegebenen Monat:
+ * Saldo ALLER Einträge vor diesem Monat (jeder Gewinn/Verlust wird in alle folgenden Monate weitergetragen)
+ * plus das Startguthaben, sobald dessen Startmonat erreicht ist.
  */
 function carryOver(monthKey) {
   const { startBalance, startMonth } = state.settings;
-  const useStart = monthKey >= startMonth;
-  const before = state.entries.filter((e) => {
-    const m = monthOf(e.date);
-    return m < monthKey && (!useStart || m >= startMonth);
-  });
-  return (useStart ? startBalance : 0) + sumOfType(before, 'income') - sumOfType(before, 'expense');
+  const before = state.entries.filter((e) => monthOf(e.date) < monthKey);
+  const start = monthKey >= startMonth ? startBalance : 0;
+  return start + sumOfType(before, 'income') - sumOfType(before, 'expense');
 }
 
 /** Betrag anzeigen: grün wenn positiv, rot wenn negativ */
